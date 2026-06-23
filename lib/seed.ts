@@ -1,4 +1,4 @@
-import type { Product, User } from "./types"
+import type { Product, Supplier, User } from "./types"
 
 export const SEED_USERS: User[] = [
   {
@@ -14,6 +14,45 @@ export const SEED_USERS: User[] = [
     email: "cliente@miabarrotes.mx",
     password: "cliente123",
     role: "cliente",
+  },
+]
+
+export const SEED_SUPPLIERS: Supplier[] = [
+  {
+    id: "s-frescos",
+    name: "Frutas y Verduras del Bajío",
+    contact: "Ramón Aguilar",
+    phone: "55 1234 5678",
+    email: "ventas@frescosbajio.mx",
+    category: "Frutas y Verduras",
+    notes: "Entrega los lunes y jueves por la mañana.",
+  },
+  {
+    id: "s-lacteos",
+    name: "Lácteos La Vaquita",
+    contact: "Patricia Méndez",
+    phone: "55 8765 4321",
+    email: "pedidos@lavaquita.mx",
+    category: "Lácteos y Huevo",
+    notes: "Producto refrigerado, requiere pago a 15 días.",
+  },
+  {
+    id: "s-despensa",
+    name: "Granos y Abarrotes González",
+    contact: "Luis González",
+    phone: "55 2468 1357",
+    email: "contacto@granosgonzalez.mx",
+    category: "Despensa",
+    notes: "Mayoreo con descuento desde 10 bultos.",
+  },
+  {
+    id: "s-bebidas",
+    name: "Distribuidora de Bebidas El Sol",
+    contact: "Carmen Ríos",
+    phone: "55 1357 2468",
+    email: "elsol@bebidas.mx",
+    category: "Bebidas",
+    notes: "Maneja botella retornable, recoge cascos vacíos.",
   },
 ]
 

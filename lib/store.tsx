@@ -8,12 +8,13 @@ import {
   useMemo,
   useState,
 } from "react"
-import type { CartItem, Order, Product, Role, User } from "./types"
-import { SEED_PRODUCTS, SEED_USERS } from "./seed"
+import type { CartItem, Order, Product, Role, Supplier, User } from "./types"
+import { SEED_PRODUCTS, SEED_SUPPLIERS, SEED_USERS } from "./seed"
 
 const KEYS = {
   users: "ma_users",
   products: "ma_products",
+  suppliers: "ma_suppliers",
   cart: "ma_cart",
   orders: "ma_orders",
   session: "ma_session",
@@ -45,6 +46,7 @@ type StoreValue = {
   ready: boolean
   currentUser: User | null
   products: Product[]
+  suppliers: Supplier[]
   cart: CartItem[]
   orders: Order[]
   cartCount: number
@@ -62,6 +64,10 @@ type StoreValue = {
   addProduct: (p: Omit<Product, "id">) => void
   updateProduct: (p: Product) => void
   deleteProduct: (id: string) => void
+  // suppliers (admin)
+  addSupplier: (s: Omit<Supplier, "id">) => void
+  updateSupplier: (s: Supplier) => void
+  deleteSupplier: (id: string) => void
 }
 
 const StoreContext = createContext<StoreValue | null>(null)
@@ -70,6 +76,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false)
   const [users, setUsers] = useState<User[]>([])
   const [products, setProducts] = useState<Product[]>([])
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -78,10 +85,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const u = load<User[]>(KEYS.users, [])
     const p = load<Product[]>(KEYS.products, [])
+    const s = load<Supplier[]>(KEYS.suppliers, [])
     const seededUsers = u.length ? u : SEED_USERS
     const seededProducts = p.length ? p : SEED_PRODUCTS
+    const seededSuppliers = s.length ? s : SEED_SUPPLIERS
     setUsers(seededUsers)
     setProducts(seededProducts)
+    setSuppliers(seededSuppliers)
     setCart(load<CartItem[]>(KEYS.cart, []))
     setOrders(load<Order[]>(KEYS.orders, []))
     const sessionId = load<string | null>(KEYS.session, null)
@@ -90,6 +100,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
     if (!u.length) save(KEYS.users, seededUsers)
     if (!p.length) save(KEYS.products, seededProducts)
+    if (!s.length) save(KEYS.suppliers, seededSuppliers)
     setReady(true)
   }, [])
 
@@ -100,6 +111,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (ready) save(KEYS.products, products)
   }, [products, ready])
+  useEffect(() => {
+    if (ready) save(KEYS.suppliers, suppliers)
+  }, [suppliers, ready])
   useEffect(() => {
     if (ready) save(KEYS.cart, cart)
   }, [cart, ready])

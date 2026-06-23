@@ -34,6 +34,16 @@ export type Product = {
   image: string
 }
 
+export type Supplier = {
+  id: string
+  name: string
+  contact: string
+  phone: string
+  email: string
+  category: Category
+  notes: string
+}
+
 export type CartItem = {
   productId: string
   qty: number
