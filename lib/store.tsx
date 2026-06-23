@@ -258,6 +258,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addProduct,
     updateProduct,
     deleteProduct,
+    suppliers,
+    addSupplier,
+    updateSupplier,
+    deleteSupplier,
   }
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

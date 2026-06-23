@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 import {
   Plus,
@@ -12,34 +12,68 @@ import {
   TriangleAlert,
   Receipt,
   Wallet,
+  Truck,
+  Mail,
+  Phone,
 } from "lucide-react"
 import { formatMXN, useStore } from "@/lib/store"
-import type { Product } from "@/lib/types"
+import type { Product, Supplier } from "@/lib/types"
 import { SiteHeader } from "@/components/site-header"
 import { ProductFormDialog } from "@/components/product-form-dialog"
+import { SupplierFormDialog } from "@/components/supplier-form-dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
 export default function AdminPage() {
-  const { currentUser, products, orders, deleteProduct, ready } = useStore()
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editing, setEditing] = useState<Product | null>(null)
-  const [tab, setTab] = useState<"inventario" | "pedidos">("inventario")
+  const {
+    currentUser,
+    products,
+    suppliers,
+    orders,
+    deleteProduct,
+    deleteSupplier,
+    ready,
+  } = useStore()
+
+  const [productDialogOpen, setProductDialogOpen] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+
+  const [supplierDialogOpen, setSupplierDialogOpen] = useState(false)
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null)
+
+  const [tab, setTab] = useState<"inventario" | "proveedores" | "pedidos">(
+    "inventario"
+  )
 
   const isAdmin = currentUser?.role === "admin"
 
-  function openNew() {
-    setEditing(null)
-    setDialogOpen(true)
+  function openNewProduct() {
+    setEditingProduct(null)
+    setProductDialogOpen(true)
   }
-  function openEdit(p: Product) {
-    setEditing(p)
-    setDialogOpen(true)
+  function openEditProduct(p: Product) {
+    setEditingProduct(p)
+    setProductDialogOpen(true)
   }
-  function handleDelete(p: Product) {
+  function handleDeleteProduct(p: Product) {
     if (confirm(`¿Eliminar "${p.name}"?`)) {
       deleteProduct(p.id)
       toast.success("Producto eliminado")
+    }
+  }
+
+  function openNewSupplier() {
+    setEditingSupplier(null)
+    setSupplierDialogOpen(true)
+  }
+  function openEditSupplier(s: Supplier) {
+    setEditingSupplier(s)
+    setSupplierDialogOpen(true)
+  }
+  function handleDeleteSupplier(s: Supplier) {
+    if (confirm(`¿Eliminar al proveedor "${s.name}"?`)) {
+      deleteSupplier(s.id)
+      toast.success("Proveedor eliminado")
     }
   }
 
@@ -80,6 +114,7 @@ export default function AdminPage() {
   const stats = [
     { icon: Package, label: "Productos", value: products.length },
     { icon: TriangleAlert, label: "Bajo inventario", value: lowStock.length },
+    { icon: Truck, label: "Proveedores", value: suppliers.length },
     { icon: Receipt, label: "Pedidos", value: orders.length },
     { icon: Wallet, label: "Ventas", value: formatMXN(revenue) },
   ]
@@ -97,13 +132,20 @@ export default function AdminPage() {
               Hola {currentUser?.name}, administra tu tienda.
             </p>
           </div>
-          <Button onClick={openNew} className="gap-1.5">
-            <Plus className="size-4" /> Nuevo producto
-          </Button>
+          {tab === "inventario" && (
+            <Button onClick={openNewProduct} className="gap-1.5">
+              <Plus className="size-4" /> Nuevo producto
+            </Button>
+          )}
+          {tab === "proveedores" && (
+            <Button onClick={openNewSupplier} className="gap-1.5">
+              <Plus className="size-4" /> Nuevo proveedor
+            </Button>
+          )}
         </div>
 
         {/* Stats */}
-        <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
           {stats.map((s) => (
             <div
               key={s.label}
@@ -124,7 +166,7 @@ export default function AdminPage() {
 
         {/* Tabs */}
         <div className="mt-8 flex gap-2 border-b border-border">
-          {(["inventario", "pedidos"] as const).map((t) => (
+          {(["inventario", "proveedores", "pedidos"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -139,7 +181,8 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {tab === "inventario" ? (
+        {/* Inventario */}
+        {tab === "inventario" && (
           <div className="mt-4 overflow-hidden rounded-2xl border border-border">
             <table className="w-full text-sm">
               <thead className="bg-secondary/50 text-left text-muted-foreground">
@@ -197,7 +240,7 @@ export default function AdminPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => openEdit(p)}
+                          onClick={() => openEditProduct(p)}
                           aria-label={`Editar ${p.name}`}
                         >
                           <Pencil className="size-4" />
@@ -205,7 +248,7 @@ export default function AdminPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(p)}
+                          onClick={() => handleDeleteProduct(p)}
                           aria-label={`Eliminar ${p.name}`}
                           className="text-muted-foreground hover:text-destructive"
                         >
@@ -218,7 +261,92 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
-        ) : (
+        )}
+
+        {/* Proveedores */}
+        {tab === "proveedores" && (
+          <div className="mt-4 flex flex-col gap-3">
+            {suppliers.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border py-16 text-center text-muted-foreground">
+                Aún no hay proveedores registrados.
+              </div>
+            ) : (
+              suppliers.map((s) => (
+                <div
+                  key={s.id}
+                  className="rounded-2xl border border-border bg-card p-4"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    {/* Info principal */}
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+                        <Truck className="size-5" />
+                      </span>
+                      <div>
+                        <p className="font-semibold text-foreground">
+                          {s.name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {s.contact}
+                        </p>
+                        <Badge className="mt-1 bg-secondary text-secondary-foreground">
+                          {s.category}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {/* Acciones */}
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openEditSupplier(s)}
+                        aria-label={`Editar ${s.name}`}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteSupplier(s)}
+                        aria-label={`Eliminar ${s.name}`}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Datos de contacto */}
+                  <div className="mt-3 flex flex-wrap gap-4 border-t border-border pt-3 text-sm text-muted-foreground">
+                    {s.phone && (
+                      <span className="flex items-center gap-1.5">
+                        <Phone className="size-3.5" />
+                        {s.phone}
+                      </span>
+                    )}
+                    {s.email && (
+                      <span className="flex items-center gap-1.5">
+                        <Mail className="size-3.5" />
+                        {s.email}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Notas */}
+                  {s.notes && (
+                    <p className="mt-2 rounded-lg bg-secondary/40 px-3 py-2 text-sm text-muted-foreground">
+                      {s.notes}
+                    </p>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Pedidos */}
+        {tab === "pedidos" && (
           <div className="mt-4 flex flex-col gap-3">
             {orders.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border py-16 text-center text-muted-foreground">
@@ -266,9 +394,15 @@ export default function AdminPage() {
       </main>
 
       <ProductFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        product={editing}
+        open={productDialogOpen}
+        onOpenChange={setProductDialogOpen}
+        product={editingProduct}
+      />
+
+      <SupplierFormDialog
+        open={supplierDialogOpen}
+        onOpenChange={setSupplierDialogOpen}
+        supplier={editingSupplier}
       />
     </div>
   )
